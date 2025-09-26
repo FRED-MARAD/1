@@ -102,6 +102,29 @@
     padding-top: auto;
 }
 
+/* Dodano style dla holograficznego orła */
+.holographic-eagle-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.holographic-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.1s ease-out, opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.holographic-layer img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
     </style>
 </head>
 <body>
@@ -146,7 +169,26 @@
         </div>
         <div class="id_own_image" style="background-image: url('https://i.imgur.com/7vHo48p.jpg');"></div>
         <img draggable="false" src="images/gzot1Pt.gif" class="flag_video">
-        <img draggable="false" src="images/R5yccCK.gif" class="eagle_video">
+        
+        <!-- Zastąpiono GIF orła holograficznym orłem z 5 warstwami -->
+        <div class="holographic-eagle-container eagle_video" id="holographicEagle">
+            <div class="holographic-layer" id="background-layer">
+                <img draggable="false" src="pictures/hologram_background.png" alt="Hologram Background">
+            </div>
+            <div class="holographic-layer" id="eagle-layer1">
+                <img draggable="false" src="pictures/eagle_layer1.png" alt="Eagle Layer 1">
+            </div>
+            <div class="holographic-layer" id="eagle-layer2">
+                <img draggable="false" src="pictures/eagle_layer2.png" alt="Eagle Layer 2">
+            </div>
+            <div class="holographic-layer" id="eagle-layer3">
+                <img draggable="false" src="pictures/eagle_layer3.png" alt="Eagle Layer 3">
+            </div>
+            <div class="holographic-layer" id="overlay-layer">
+                <img draggable="false" src="pictures/hologram_overlay.png" alt="Hologram Overlay">
+            </div>
+        </div>
+        
         <p class="eagle_text">Rzeczpospolita<br>Polska</p>
         <div class="id_data_grid">
             <div class="data_holder">
@@ -287,10 +329,101 @@
     <script src="assets/manifest.js"></script>
 
     <script>
-       
+        let isGyroscopeEnabled = false;
 
+        // Funkcja do żądania pozwolenia na iOS
+        function requestGyroscopePermission() {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            isGyroscopeEnabled = true;
+                            startGyroscope();
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Android lub starsze przeglądarki
+                isGyroscopeEnabled = true;
+                startGyroscope();
+            }
+        }
 
-        
+        // Funkcja uruchamiająca żyroskop
+        function startGyroscope() {
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+
+        // Obsługa ruchu żyroskopu
+        function handleOrientation(event) {
+            if (!isGyroscopeEnabled) return;
+
+            const gamma = event.gamma || 0; // obrót lewo-prawo (-90 do 90)
+            const beta = event.beta || 0;   // obrót przód-tył (-180 do 180)
+
+            // Normalizacja wartości do zakresu 0-1
+            const normalizedGamma = Math.max(-1, Math.min(1, gamma / 45));
+            const normalizedBeta = Math.max(-1, Math.min(1, beta / 45));
+
+            // Pobierz warstwy hologramu
+            const backgroundLayer = document.getElementById('background-layer');
+            const eagleLayer1 = document.getElementById('eagle-layer1');
+            const eagleLayer2 = document.getElementById('eagle-layer2');
+            const eagleLayer3 = document.getElementById('eagle-layer3');
+            const overlayLayer = document.getElementById('overlay-layer');
+
+            // Oblicz przezroczystość i przesunięcie dla każdej warstwy
+            const baseOpacity = 0.8;
+            const movement = normalizedGamma * 10; // maksymalne przesunięcie 10px
+
+            // Tło hologramu - lekkie przesunięcie
+            if (backgroundLayer) {
+                backgroundLayer.style.transform = `translate(${movement * 0.2}px, ${normalizedBeta * 2}px)`;
+                backgroundLayer.style.opacity = baseOpacity * 0.6;
+            }
+
+            // Pierwsza warstwa orła - średnie przesunięcie
+            if (eagleLayer1) {
+                const opacity1 = Math.abs(normalizedGamma) < 0.6 ? baseOpacity : baseOpacity * (1 - Math.abs(normalizedGamma));
+                eagleLayer1.style.transform = `translate(${movement * 0.5}px, ${normalizedBeta * 3}px)`;
+                eagleLayer1.style.opacity = opacity1;
+            }
+
+            // Druga warstwa orła - większe przesunięcie
+            if (eagleLayer2) {
+                const opacity2 = Math.abs(normalizedGamma) < 0.3 ? baseOpacity : baseOpacity * (0.8 - Math.abs(normalizedGamma));
+                eagleLayer2.style.transform = `translate(${movement * 0.8}px, ${normalizedBeta * 4}px)`;
+                eagleLayer2.style.opacity = opacity2;
+            }
+
+            // Trzecia warstwa orła - największe przesunięcie
+            if (eagleLayer3) {
+                const opacity3 = Math.abs(normalizedGamma) < 0.1 ? baseOpacity : baseOpacity * (0.6 - Math.abs(normalizedGamma) * 1.5);
+                eagleLayer3.style.transform = `translate(${movement}px, ${normalizedBeta * 5}px)`;
+                eagleLayer3.style.opacity = Math.max(0, opacity3);
+            }
+
+            // Overlay hologramu - na górze, lekko przezroczysty
+            if (overlayLayer) {
+                overlayLayer.style.transform = `translate(${movement * 0.3}px, ${normalizedBeta * 2}px)`;
+                overlayLayer.style.opacity = 0.4 + Math.abs(normalizedGamma) * 0.3;
+            }
+        }
+
+        // Uruchom żyroskop po kliknięciu (wymagane na iOS)
+        document.addEventListener('click', function() {
+            if (!isGyroscopeEnabled) {
+                requestGyroscopePermission();
+            }
+        }, { once: true });
+
+        // Automatyczne uruchomienie na Androidzie
+        if (navigator.userAgent.toLowerCase().indexOf('android') > -1) {
+            setTimeout(() => {
+                isGyroscopeEnabled = true;
+                startGyroscope();
+            }, 1000);
+        }
     </script>
     
 </body>
