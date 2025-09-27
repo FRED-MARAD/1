@@ -173,19 +173,22 @@
         <!-- Zastąpiono GIF orła holograficznym orłem z 5 warstwami -->
         <div class="holographic-eagle-container eagle_video" id="holographicEagle">
             <div class="holographic-layer" id="background-layer">
-                <img draggable="false" src="pictures/hologram_background.png" alt="Hologram Background">
+                <img draggable="false" src="pictures/hologram_background.webp" alt="Hologram Background">
             </div>
-            <div class="holographic-layer" id="eagle-layer1">
-                <img draggable="false" src="pictures/eagle_layer1.png" alt="Eagle Layer 1">
+            <div class="holographic-layer" id="monochromatic-layer">
+                <img draggable="false" src="pictures/hologram_emblem_monochromatic.webp" alt="Monochromatic Eagle">
             </div>
-            <div class="holographic-layer" id="eagle-layer2">
-                <img draggable="false" src="pictures/eagle_layer2.png" alt="Eagle Layer 2">
+            <div class="holographic-layer" id="fake-layer">
+                <img draggable="false" src="pictures/hologram_emblem_fake.webp" alt="Fake Eagle">
             </div>
-            <div class="holographic-layer" id="eagle-layer3">
-                <img draggable="false" src="pictures/eagle_layer3.png" alt="Eagle Layer 3">
+            <div class="holographic-layer" id="top-layer">
+                <img draggable="false" src="pictures/hologram_emblem_top.webp" alt="Top Eagle">
+            </div>
+            <div class="holographic-layer" id="edges-layer">
+                <img draggable="false" src="pictures/hologram_emblem_edges.webp" alt="Eagle Edges">
             </div>
             <div class="holographic-layer" id="overlay-layer">
-                <img draggable="false" src="pictures/hologram_overlay.png" alt="Hologram Overlay">
+                <img draggable="false" src="pictures/hologram_overlay.webp" alt="Hologram Overlay">
             </div>
         </div>
         
@@ -354,7 +357,7 @@
             window.addEventListener('deviceorientation', handleOrientation);
         }
 
-        // Obsługa ruchu żyroskopu
+        // Tylko hologram_overlay reaguje na ruch
         function handleOrientation(event) {
             if (!isGyroscopeEnabled) return;
 
@@ -365,48 +368,19 @@
             const normalizedGamma = Math.max(-1, Math.min(1, gamma / 45));
             const normalizedBeta = Math.max(-1, Math.min(1, beta / 45));
 
-            // Pobierz warstwy hologramu
-            const backgroundLayer = document.getElementById('background-layer');
-            const eagleLayer1 = document.getElementById('eagle-layer1');
-            const eagleLayer2 = document.getElementById('eagle-layer2');
-            const eagleLayer3 = document.getElementById('eagle-layer3');
+            // Pobierz tylko overlay layer - reszta jest statyczna
             const overlayLayer = document.getElementById('overlay-layer');
 
-            // Oblicz przezroczystość i przesunięcie dla każdej warstwy
-            const baseOpacity = 0.8;
-            const movement = normalizedGamma * 10; // maksymalne przesunięcie 10px
-
-            // Tło hologramu - lekkie przesunięcie
-            if (backgroundLayer) {
-                backgroundLayer.style.transform = `translate(${movement * 0.2}px, ${normalizedBeta * 2}px)`;
-                backgroundLayer.style.opacity = baseOpacity * 0.6;
-            }
-
-            // Pierwsza warstwa orła - średnie przesunięcie
-            if (eagleLayer1) {
-                const opacity1 = Math.abs(normalizedGamma) < 0.6 ? baseOpacity : baseOpacity * (1 - Math.abs(normalizedGamma));
-                eagleLayer1.style.transform = `translate(${movement * 0.5}px, ${normalizedBeta * 3}px)`;
-                eagleLayer1.style.opacity = opacity1;
-            }
-
-            // Druga warstwa orła - większe przesunięcie
-            if (eagleLayer2) {
-                const opacity2 = Math.abs(normalizedGamma) < 0.3 ? baseOpacity : baseOpacity * (0.8 - Math.abs(normalizedGamma));
-                eagleLayer2.style.transform = `translate(${movement * 0.8}px, ${normalizedBeta * 4}px)`;
-                eagleLayer2.style.opacity = opacity2;
-            }
-
-            // Trzecia warstwa orła - największe przesunięcie
-            if (eagleLayer3) {
-                const opacity3 = Math.abs(normalizedGamma) < 0.1 ? baseOpacity : baseOpacity * (0.6 - Math.abs(normalizedGamma) * 1.5);
-                eagleLayer3.style.transform = `translate(${movement}px, ${normalizedBeta * 5}px)`;
-                eagleLayer3.style.opacity = Math.max(0, opacity3);
-            }
-
-            // Overlay hologramu - na górze, lekko przezroczysty
+            // Tylko overlay hologramu reaguje na ruch
             if (overlayLayer) {
-                overlayLayer.style.transform = `translate(${movement * 0.3}px, ${normalizedBeta * 2}px)`;
-                overlayLayer.style.opacity = 0.4 + Math.abs(normalizedGamma) * 0.3;
+                const movement = normalizedGamma * 15; // maksymalne przesunięcie 15px
+                const verticalMovement = normalizedBeta * 8; // pionowe przesunięcie
+                
+                // Zmiana przezroczystości w zależności od kąta
+                const opacity = 0.3 + Math.abs(normalizedGamma) * 0.4 + Math.abs(normalizedBeta) * 0.2;
+                
+                overlayLayer.style.transform = `translate(${movement}px, ${verticalMovement}px)`;
+                overlayLayer.style.opacity = Math.min(0.8, opacity);
             }
         }
 
